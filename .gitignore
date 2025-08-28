@@ -1,0 +1,8 @@
+build/
+.cache/
+
+.envrc
+
+.DS_Store
+.AppleDouble
+.LSOverride
