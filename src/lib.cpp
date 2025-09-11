@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <vector>
 
 // Pos class methods definition
 Pos::Pos() : _x(0), _y(0) {};
@@ -77,7 +78,7 @@ bool Obj::operator==(const Obj &other) const {
 
 bool Obj::operator!=(const Obj &other) const { return !(*this == other); }
 
-std::ostream& operator<<(std::ostream &stream, const Obj &obj) {
+std::ostream &operator<<(std::ostream &stream, const Obj &obj) {
   stream << "Object:\n\t(x, y) = (" << obj.pos()[0] << ", " << obj.pos()[1]
          << ")" << std::endl;
   stream << "\twidth = " << obj.getWidth() << std::endl;
@@ -92,7 +93,7 @@ Collider::Node::Node(Obj obj, NodeP &&child1, NodeP &&child2)
 
 Collider::Node::Node(Obj obj) : obj(obj), left(nullptr), right(nullptr) {};
 
-bool Collider::Node::is_leaf() { return !(left || right); }
+bool Collider::Node::isLeaf() { return !(left || right); }
 
 Collider::Tree::Tree() : root{nullptr} {};
 
@@ -112,7 +113,7 @@ void Collider::Tree::insert(const Obj &obj) {
     return;
   }
 
-  if (root->is_leaf()) {
+  if (root->isLeaf()) {
     root = createNode(root, obj);
     return;
   }
@@ -173,7 +174,7 @@ void Collider::Tree::recursiveInsert(NodeP &node, const NodeP &parent,
     return;
   }
   case LEFT: {
-    if (node->left->is_leaf()) {
+    if (node->left->isLeaf()) {
       node->left = createNode(node->left, obj);
       break;
     }
@@ -182,7 +183,7 @@ void Collider::Tree::recursiveInsert(NodeP &node, const NodeP &parent,
     break;
   }
   case RIGHT: {
-    if (node->right->is_leaf()) {
+    if (node->right->isLeaf()) {
       node->right = createNode(node->right, obj);
       break;
     }
@@ -211,4 +212,12 @@ void Collider::Tree::postOrderFlatten(const NodeP &node,
   vec.push_back(node->obj);
 }
 
+std::vector<Obj> Collider::Tree::flatten() {
+  std::vector<Obj> vec;
+  postOrderFlatten(root, vec);
+  return vec;
+}
+
 Collider::Collider(std::vector<Obj> &objects) : tree(objects) {};
+
+std::vector<Obj> Collider::flatten() { return tree.flatten(); };

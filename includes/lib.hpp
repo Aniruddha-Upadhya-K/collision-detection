@@ -66,7 +66,7 @@ public:
   Collider();
   explicit Collider(std::vector<Obj> &objects);
 
-  std::vector<Obj> debug() { return tree.flatten(); }
+  std::vector<Obj> flatten(); 
 
 private:
   struct Node {
@@ -80,7 +80,7 @@ private:
 
     explicit Node(Obj obj);
 
-    bool is_leaf();
+    bool isLeaf();
   };
   typedef std::unique_ptr<Node> NodeP;
 
@@ -95,11 +95,7 @@ private:
 
     void insert(const Obj &obj);
 
-    std::vector<Obj> flatten() {
-      std::vector<Obj> vec;
-      postOrderFlatten(root, vec);
-      return vec;
-    }
+    std::vector<Obj> flatten(); 
 
   private:
     enum Direction { LEFT, RIGHT, SIBLING };

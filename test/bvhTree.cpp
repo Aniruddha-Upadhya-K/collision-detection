@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(root) {
   std::vector<Obj> objs { o1 };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.debug();
+  std::vector<Obj> result = coll.flatten();
 
   std::vector<Obj> expected = {
     {{3, 4}, 2, 1}
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(two_objects) {
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.debug();
+  std::vector<Obj> result = coll.flatten();
 
   std::vector<Obj> expected = {
     {{3, 2}, 2, 3},
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(three_objects_nested_and_disjoint) {
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.debug();
+  std::vector<Obj> result = coll.flatten();
 
   std::vector<Obj> expected = {
     {{0, 0}, 10, 10},
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(four_objects_chain_overlap) {
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.debug();
+  std::vector<Obj> result = coll.flatten();
 
   std::vector<Obj> expected = {
     {{0, 0}, 4, 4},
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(five_objects_varied) {
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.debug();
+  std::vector<Obj> result = coll.flatten();
 
   std::vector<Obj> expected = {
     {{0, 0}, 5, 5},
