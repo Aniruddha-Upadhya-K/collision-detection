@@ -14,13 +14,16 @@ public:
 
   void update(int delta_x, int delta_y);
 
-  int x();
-  void x(int x);
+  int getX() const;
+  void setX(int x);
 
-  int y();
-  void y(int y);
+  int getY() const;
+  void setY(int y);
 
   const std::array<int, 2> xy() const;
+
+  bool operator==(const Pos &other) const;
+  bool operator!=(const Pos &other) const;
 
 private:
   int _x, _y;
@@ -30,34 +33,40 @@ class Obj {
   // TODO: copy/move constructor needed
 public:
   Obj();
-  Obj(const Pos &pos, const int height, const int width);
+  Obj(const Pos &pos, const int width, const int height);
 
   const std::array<int, 2> pos() const;
   void pos(const Pos &pos);
 
-  int height();
-  void height(int height);
+  int getHeight() const;
+  void setHeight(int height);
 
-  int width();
-  void width(int width);
+  int getWidth() const;
+  void setWidth(int width);
 
   int area() const;
+
+  bool operator==(const Obj &other) const;
+  bool operator!=(const Obj &other) const;
 
   // make these two methods static
   static const Obj boundingBoxUnion(const Obj &obj1, const Obj &obj2);
   static int boundingBoxUnionArea(const Obj &obj1, const Obj &obj2);
 
+
 private:
   Pos _pos;
-  int _h, _w;
+  int _w, _h;
 };
+
+std::ostream& operator<<(std::ostream &stream, const Obj &obj);
 
 class Collider {
 public:
   Collider();
   explicit Collider(std::vector<Obj> &objects);
 
-  void debug() { tree.debug(); }
+  std::vector<Obj> debug() { return tree.flatten(); }
 
 private:
   struct Node {
@@ -86,7 +95,11 @@ private:
 
     void insert(const Obj &obj);
 
-    void debug() { postOrderDebug(root); }
+    std::vector<Obj> flatten() {
+      std::vector<Obj> vec;
+      postOrderFlatten(root, vec);
+      return vec;
+    }
 
   private:
     enum Direction { LEFT, RIGHT, SIBLING };
@@ -98,7 +111,7 @@ private:
 
     void recursiveInsert(NodeP &node, const NodeP &parent, const Obj &obj);
 
-    void postOrderDebug(const NodeP &node);
+    void postOrderFlatten(const NodeP &node, std::vector<Obj> &vec);
   };
 
   Tree tree;

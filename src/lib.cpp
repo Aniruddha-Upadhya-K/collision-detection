@@ -13,33 +13,39 @@ void Pos::update(int delta_x = 0, int delta_y = 0) {
   _y += delta_y;
 }
 
-int Pos::x() { return _x; }
+int Pos::getX() const { return _x; }
 
-void Pos::x(int x) { _x = x; }
+void Pos::setX(int x) { _x = x; }
 
-int Pos::y() { return _y; }
+int Pos::getY() const { return _y; }
 
-void Pos::y(int y) { _y = y; }
+void Pos::setY(int y) { _y = y; }
 
 const std::array<int, 2> Pos::xy() const { return {_x, _y}; }
 
-// Obj class methods definitions
-Obj::Obj() : _pos(), _h(0), _w(0) {};
+bool Pos::operator==(const Pos &other) const {
+  return (_x == other._x && _y == other._y);
+}
 
-Obj::Obj(const Pos &pos, const int height, const int width)
-    : _pos(pos), _h(height), _w(width) {};
+bool Pos::operator!=(const Pos &other) const { return !(*this == other); }
+
+// Obj class methods definitions
+Obj::Obj() : _pos(), _w(0), _h(0) {};
+
+Obj::Obj(const Pos &pos, const int width, const int height)
+    : _pos(pos), _w(width), _h(height) {};
 
 const std::array<int, 2> Obj::pos() const { return _pos.xy(); }
 
 void Obj::pos(const Pos &pos) { _pos = pos; }
 
-int Obj::height() { return _h; }
+int Obj::getHeight() const { return _h; }
 
-void Obj::height(int height) { _h = height; }
+void Obj::setHeight(int height) { _h = height; }
 
-int Obj::width() { return _w; }
+int Obj::getWidth() const { return _w; }
 
-void Obj::width(int width) { _w = width; }
+void Obj::setWidth(int width) { _w = width; }
 
 int Obj::area() const { return _w * _h; }
 
@@ -48,9 +54,9 @@ const Obj Obj::boundingBoxUnion(const Obj &obj1, const Obj &obj2) {
   auto p2 = obj2.pos();
 
   Pos p{std::min(p1[0], p2[0]), std::min(p1[1], p2[1])};
-  int w = std::max(p1[0] + obj1._w, p2[0] + obj2._w) - p.x();
-  int h = std::max(p1[1] + obj1._h, p2[1] + obj2._h) - p.y();
-  Obj o{p, h, w};
+  int w = std::max(p1[0] + obj1._w, p2[0] + obj2._w) - p.getX();
+  int h = std::max(p1[1] + obj1._h, p2[1] + obj2._h) - p.getY();
+  Obj o{p, w, h};
   return o;
 }
 
@@ -59,10 +65,24 @@ int Obj::boundingBoxUnionArea(const Obj &obj1, const Obj &obj2) {
   const std::array<int, 2> &p2 = obj2.pos();
 
   Pos p{std::min(p1[0], p2[0]), std::min(p1[1], p2[1])};
-  int w = std::max(p1[0] + obj1._w, p2[0] + obj2._w) - p.x();
-  int h = std::max(p1[1] + obj1._h, p2[1] + obj2._h) - p.y();
+  int w = std::max(p1[0] + obj1._w, p2[0] + obj2._w) - p.getX();
+  int h = std::max(p1[1] + obj1._h, p2[1] + obj2._h) - p.getY();
 
   return h * w;
+}
+
+bool Obj::operator==(const Obj &other) const {
+  return (_pos == other._pos && _h == other._h && _w == other._w);
+}
+
+bool Obj::operator!=(const Obj &other) const { return !(*this == other); }
+
+std::ostream& operator<<(std::ostream &stream, const Obj &obj) {
+  stream << "Object:\n\t(x, y) = (" << obj.pos()[0] << ", " << obj.pos()[1]
+         << ")" << std::endl;
+  stream << "\twidth = " << obj.getWidth() << std::endl;
+  stream << "\theight = " << obj.getHeight() << std::endl;
+  return stream;
 }
 
 Collider::Node::Node() : obj(), left(nullptr), right(nullptr) {};
@@ -107,8 +127,10 @@ Collider::Tree::minimalBoundingBox(const std::unique_ptr<Node> &node,
   Direction dir{};
 
   s_area = node->obj.area() + obj.area();
-  l_area = Obj::boundingBoxUnionArea(obj, node->left->obj) + node->right->obj.area();
-  r_area = Obj::boundingBoxUnionArea(obj, node->right->obj) + node->left->obj.area();
+  l_area =
+      Obj::boundingBoxUnionArea(obj, node->left->obj) + node->right->obj.area();
+  r_area =
+      Obj::boundingBoxUnionArea(obj, node->right->obj) + node->left->obj.area();
 
   if (r_area < l_area) {
     if (r_area < s_area)
@@ -171,28 +193,22 @@ void Collider::Tree::recursiveInsert(NodeP &node, const NodeP &parent,
   }
 
   // update dimension of parent objects
-  if (Obj::boundingBoxUnionArea(node->left->obj, node->right->obj) == node->obj.area()) {
-    return;
+  if (Obj::boundingBoxUnionArea(node->left->obj, node->right->obj) !=
+      node->obj.area()) {
+    node->obj = Obj::boundingBoxUnion(node->left->obj, node->right->obj);
   }
-
-  node->obj = Obj::boundingBoxUnion(node->left->obj, node->right->obj);
 }
 
-void Collider::Tree::postOrderDebug(const NodeP &node) {
+void Collider::Tree::postOrderFlatten(const NodeP &node,
+                                      std::vector<Obj> &vec) {
   if (!node) {
     return;
   }
 
-  postOrderDebug(node->left);
-  postOrderDebug(node->right);
+  postOrderFlatten(node->left, vec);
+  postOrderFlatten(node->right, vec);
 
-  Obj &obj = node->obj;
-
-  std::cout << "Object : \nposition = " << obj.pos()[0] << ", " << obj.pos()[1]
-            << std::endl;
-  std::cout << "width = " << obj.width() << std::endl;
-  std::cout << "height = " << obj.height() << std::endl;
-  std::cout << "\n\n\n";
+  vec.push_back(node->obj);
 }
 
 Collider::Collider(std::vector<Obj> &objects) : tree(objects) {};

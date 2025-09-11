@@ -20,8 +20,13 @@ target_link_libraries(collision_detection PRIVATE collision_lib)
 enable_testing()
 
 file(GLOB TEST_SOURCES test/*.cpp)
-add_executable(all_tests ${TEST_SOURCES})
-target_compile_options(all_tests PUBLIC -Wall -Wextra -g -O0 -pedantic)
-target_link_libraries(all_tests PRIVATE collision_lib Boost::unit_test_framework)
 
-add_test(NAME all_tests COMMAND all_tests)
+foreach(test_file ${TEST_SOURCES})
+  get_filename_component(test_name ${test_file} NAME_WE)
+
+  add_executable(${test_name}_test ${test_file})
+  target_compile_options(${test_name}_test PUBLIC -Wall -Wextra -g -O0 -pedantic)
+  target_link_libraries(${test_name}_test PRIVATE collision_lib Boost::unit_test_framework)
+
+  add_test(NAME ${test_name} COMMAND ${test_name}_test)
+endforeach()

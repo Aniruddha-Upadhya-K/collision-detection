@@ -9,11 +9,9 @@ BOOST_AUTO_TEST_CASE(bounding_box_overlap) {
     Obj o2(Pos(5, 5), 10, 10);
 
     Obj result = Obj::boundingBoxUnion(o1, o2);
+    Obj expected {{0, 0}, 15, 15};
 
-    BOOST_CHECK_EQUAL(result.pos()[0], 0);
-    BOOST_CHECK_EQUAL(result.pos()[1], 0);
-    BOOST_CHECK_EQUAL(result.width(), 15);
-    BOOST_CHECK_EQUAL(result.height(), 15);
+    BOOST_CHECK_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(bounding_box_disjoint) {
@@ -21,11 +19,9 @@ BOOST_AUTO_TEST_CASE(bounding_box_disjoint) {
     Obj o2(Pos(20, 20), 5, 5);
 
     Obj result = Obj::boundingBoxUnion(o1, o2);
+    Obj expected {{0, 0}, 25, 25};
 
-    BOOST_CHECK_EQUAL(result.pos()[0], 0);
-    BOOST_CHECK_EQUAL(result.pos()[1], 0);
-    BOOST_CHECK_EQUAL(result.width(), 25);
-    BOOST_CHECK_EQUAL(result.height(), 25);
+    BOOST_CHECK_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(bounding_box_area_overlap) {
