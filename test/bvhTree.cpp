@@ -1,12 +1,12 @@
-#include <cassert>
-#define BOOST_TEST_MODULE bvh_tree
+#define BOOST_TEST_MODULE bvh_tree_test
 #include <boost/test/unit_test.hpp>
+#include <cassert>
 #include <vector>
 #include "lib.hpp"
 
 BOOST_AUTO_TEST_SUITE(bvh_tree_test)
 
-void check_obj_vec(const size_t num_objs,const std::vector<Obj> &result, const std::vector<Obj> &expected) {
+void checkObjVec(const size_t num_objs,const std::vector<Obj> &result, const std::vector<Obj> &expected) {
   size_t size = 2 * num_objs - 1; // Given the number of leaf node, there will always be 2n-1 nodes in a binary tree
 
   assert(expected.size() == size);
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(root) {
     {{3, 4}, 2, 1}
   };
 
-  check_obj_vec(objs.size(), result, expected);
+  checkObjVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(two_objects) {
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(two_objects) {
     {{1, 1}, 4, 4}
   };
   
-  check_obj_vec(objs.size(), result, expected);
+  checkObjVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(three_objects_nested_and_disjoint) {
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(three_objects_nested_and_disjoint) {
     {{0, 0}, 25, 25}
   };
 
-  check_obj_vec(objs.size(), result, expected);
+  checkObjVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(four_objects_chain_overlap) {
@@ -91,10 +91,10 @@ BOOST_AUTO_TEST_CASE(four_objects_chain_overlap) {
     {{0, 0}, 11, 11}
   };
 
-  check_obj_vec(objs.size(), result, expected);
+  checkObjVec(objs.size(), result, expected);
 }
 
-BOOST_AUTO_TEST_CASE(five_objects_varied) {
+BOOST_AUTO_TEST_CASE(four_objects_disjoint) {
   std::vector<Obj> objs = {
     {{0, 0}, 5, 5},
     {{6, 4}, 2, 2},
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(five_objects_varied) {
     {{0, 0}, 8, 15},
   };
 
-  check_obj_vec(objs.size(), result, expected);
+  checkObjVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

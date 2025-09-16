@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
 
 class Pos {
@@ -49,10 +50,9 @@ public:
   bool operator==(const Obj &other) const;
   bool operator!=(const Obj &other) const;
 
-  // make these two methods static
   static const Obj boundingBoxUnion(const Obj &obj1, const Obj &obj2);
   static int boundingBoxUnionArea(const Obj &obj1, const Obj &obj2);
-
+  static bool isBoundingBoxIntersection(const Obj &obj1, const Obj &obj2);
 
 private:
   Pos _pos;
@@ -66,7 +66,9 @@ public:
   Collider();
   explicit Collider(std::vector<Obj> &objects);
 
-  std::vector<Obj> flatten(); 
+  std::vector<Obj> flatten();
+
+  std::vector<std::pair<Obj, Obj>> collisionDetection();
 
 private:
   struct Node {
@@ -86,6 +88,7 @@ private:
 
   class Tree {
   public:
+    int count;
     std::unique_ptr<Node> root;
 
     Tree();
@@ -95,7 +98,12 @@ private:
 
     void insert(const Obj &obj);
 
-    std::vector<Obj> flatten(); 
+    void recursiveCollisionDetectionMain(const NodeP &node,
+                                         std::vector<std::pair<Obj, Obj>> &vec);
+    void recursiveCollisionDetection(const NodeP &child1, const NodeP &child2,
+                                     std::vector<std::pair<Obj, Obj>> &vec);
+
+    void postOrderFlatten(const NodeP &node, std::vector<Obj> &vec);
 
   private:
     enum Direction { LEFT, RIGHT, SIBLING };
@@ -106,8 +114,6 @@ private:
     NodeP createNode(NodeP &child, const Obj &obj);
 
     void recursiveInsert(NodeP &node, const NodeP &parent, const Obj &obj);
-
-    void postOrderFlatten(const NodeP &node, std::vector<Obj> &vec);
   };
 
   Tree tree;

@@ -1,4 +1,4 @@
-#define BOOST_TEST_MODULE bounding_box
+#define BOOST_TEST_MODULE bounding_box_test
 #include <boost/test/unit_test.hpp>
 #include "lib.hpp"
 

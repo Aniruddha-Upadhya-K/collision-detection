@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <utility>
 #include <vector>
 
 // Pos class methods definition
@@ -70,6 +71,23 @@ int Obj::boundingBoxUnionArea(const Obj &obj1, const Obj &obj2) {
   int h = std::max(p1[1] + obj1._h, p2[1] + obj2._h) - p.getY();
 
   return h * w;
+}
+
+bool Obj::isBoundingBoxIntersection(const Obj &obj1, const Obj &obj2) {
+  int o1_left = obj1._pos.getX();
+  int o1_right = obj1._pos.getX() + obj1._w;
+  int o1_top = obj1._pos.getY();
+  int o1_bottom = obj1._pos.getY() + obj1._h;
+
+  int o2_left = obj2._pos.getX();
+  int o2_right = obj2._pos.getX() + obj2._w;
+  int o2_top = obj2._pos.getY();
+  int o2_bottom = obj2._pos.getY() + obj2._h;
+
+  bool intersection_x = o1_left < o2_right && o1_right > o2_left;
+  bool intersection_y = o1_top < o2_bottom && o1_bottom > o2_top;
+
+  return intersection_x && intersection_y;
 }
 
 bool Obj::operator==(const Obj &other) const {
@@ -200,6 +218,58 @@ void Collider::Tree::recursiveInsert(NodeP &node, const NodeP &parent,
   }
 }
 
+void Collider::Tree::recursiveCollisionDetection(
+    const NodeP &child1, const NodeP &child2,
+    std::vector<std::pair<Obj, Obj>> &vec) {
+  if (!child1 || !child2)
+    return;
+
+  count++;
+
+  if (Obj::isBoundingBoxIntersection(child1->obj, child2->obj)) {
+    if (child1->isLeaf() && child2->isLeaf()) {
+      vec.push_back({child1->obj, child2->obj});
+      return;
+    }
+
+    if (!child1->isLeaf() && !child2->isLeaf()) {
+      recursiveCollisionDetection(child1->left, child2->left, vec);
+      recursiveCollisionDetection(child1->left, child2->right, vec);
+      recursiveCollisionDetection(child1->right, child2->left, vec);
+      recursiveCollisionDetection(child1->right, child2->right, vec);
+      return;
+    }
+
+    if (child1->isLeaf()) {
+      recursiveCollisionDetection(child1, child2->left, vec);
+      recursiveCollisionDetection(child1, child2->right, vec);
+      return;
+    }
+
+    if (child2->isLeaf()) {
+      recursiveCollisionDetection(child2, child1->left, vec);
+      recursiveCollisionDetection(child2, child1->right, vec);
+    }
+  }
+}
+
+void Collider::Tree::recursiveCollisionDetectionMain(
+    const NodeP &node, std::vector<std::pair<Obj, Obj>> &vec) {
+  if (!node)
+    return;
+  if (node->isLeaf())
+    return;
+
+  recursiveCollisionDetection(node->left, node->right, vec);
+
+  if (!node->left->isLeaf()) {
+    recursiveCollisionDetectionMain(node->left, vec);
+  }
+  if (!node->right->isLeaf()) {
+    recursiveCollisionDetectionMain(node->right, vec);
+  }
+}
+
 void Collider::Tree::postOrderFlatten(const NodeP &node,
                                       std::vector<Obj> &vec) {
   if (!node) {
@@ -212,12 +282,22 @@ void Collider::Tree::postOrderFlatten(const NodeP &node,
   vec.push_back(node->obj);
 }
 
-std::vector<Obj> Collider::Tree::flatten() {
-  std::vector<Obj> vec;
-  postOrderFlatten(root, vec);
-  return vec;
-}
-
 Collider::Collider(std::vector<Obj> &objects) : tree(objects) {};
 
-std::vector<Obj> Collider::flatten() { return tree.flatten(); };
+std::vector<Obj> Collider::flatten() {
+  std::vector<Obj> vec;
+  tree.postOrderFlatten(tree.root, vec);
+  return vec;
+};
+
+std::vector<std::pair<Obj, Obj>> Collider::collisionDetection() {
+  std::vector<std::pair<Obj, Obj>> vec;
+  if (!tree.root || tree.root->isLeaf())
+    return vec;
+
+  tree.count = 0;
+  tree.recursiveCollisionDetectionMain(tree.root, vec);
+  std::cout<<"count is = "<<tree.count<<std::endl;
+
+  return vec;
+}
