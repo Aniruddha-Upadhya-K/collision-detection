@@ -5,151 +5,130 @@
 #include <utility>
 #include <vector>
 
-// Pos class methods definition
-Pos::Pos() : _x(0), _y(0) {};
+// Vec2 class methods definition
+Vec2::Vec2(int x, int y) : val({x, y}) {};
 
-Pos::Pos(int x, int y) : _x(x), _y(y) {};
-
-void Pos::update(int delta_x = 0, int delta_y = 0) {
-  _x += delta_x;
-  _y += delta_y;
+bool Vec2::operator==(const Vec2 &other) const {
+  return (this->val == other.val);
 }
 
-int Pos::getX() const { return _x; }
+bool Vec2::operator!=(const Vec2 &other) const { return !(*this == other); }
 
-void Pos::setX(int x) { _x = x; }
-
-int Pos::getY() const { return _y; }
-
-void Pos::setY(int y) { _y = y; }
-
-const std::array<int, 2> Pos::xy() const { return {_x, _y}; }
-
-bool Pos::operator==(const Pos &other) const {
-  return (_x == other._x && _y == other._y);
+Vec2 Vec2::operator+(const Vec2 &other) const {
+  return {this->val[0] + other[0], this->val[1] + other[1]};
 }
 
-bool Pos::operator!=(const Pos &other) const { return !(*this == other); }
-
-// Obj class methods definitions
-Obj::Obj() : _pos(), _w(0), _h(0) {};
-
-Obj::Obj(const Pos &pos, const int width, const int height)
-    : _pos(pos), _w(width), _h(height) {};
-
-const std::array<int, 2> Obj::pos() const { return _pos.xy(); }
-
-void Obj::pos(const Pos &pos) { _pos = pos; }
-
-int Obj::getHeight() const { return _h; }
-
-void Obj::setHeight(int height) { _h = height; }
-
-int Obj::getWidth() const { return _w; }
-
-void Obj::setWidth(int width) { _w = width; }
-
-int Obj::area() const { return _w * _h; }
-
-const Obj Obj::boundingBoxUnion(const Obj &obj1, const Obj &obj2) {
-  auto p1 = obj1.pos();
-  auto p2 = obj2.pos();
-
-  Pos p{std::min(p1[0], p2[0]), std::min(p1[1], p2[1])};
-  int w = std::max(p1[0] + obj1._w, p2[0] + obj2._w) - p.getX();
-  int h = std::max(p1[1] + obj1._h, p2[1] + obj2._h) - p.getY();
-  Obj o{p, w, h};
-  return o;
+Vec2 Vec2::operator-(const Vec2 &other) const {
+  return {this->val[0] - other.val[0], this->val[1] - other.val[1]};
 }
 
-int Obj::boundingBoxUnionArea(const Obj &obj1, const Obj &obj2) {
-  const std::array<int, 2> &p1 = obj1.pos();
-  const std::array<int, 2> &p2 = obj2.pos();
-
-  Pos p{std::min(p1[0], p2[0]), std::min(p1[1], p2[1])};
-  int w = std::max(p1[0] + obj1._w, p2[0] + obj2._w) - p.getX();
-  int h = std::max(p1[1] + obj1._h, p2[1] + obj2._h) - p.getY();
-
-  return h * w;
+int Vec2::operator[](std::size_t idx) const {
+  if (idx > 1 || idx < 0)
+    throw "Vec2: accessing out of bound index";
+  return this->val[idx];
 }
 
-bool Obj::isBoundingBoxIntersection(const Obj &obj1, const Obj &obj2) {
-  int o1_left = obj1._pos.getX();
-  int o1_right = obj1._pos.getX() + obj1._w;
-  int o1_top = obj1._pos.getY();
-  int o1_bottom = obj1._pos.getY() + obj1._h;
+std::ostream &operator<<(std::ostream &stream, const Vec2 &vec) {
+  stream << '(' << vec[0] << ", " << vec[1] << ')';
+  return stream;
+}
 
-  int o2_left = obj2._pos.getX();
-  int o2_right = obj2._pos.getX() + obj2._w;
-  int o2_top = obj2._pos.getY();
-  int o2_bottom = obj2._pos.getY() + obj2._h;
+Vec2 Vec2::min(const Vec2 &vec1, const Vec2 &vec2) {
+  return {std::min(vec1[0], vec2[0]), std::min(vec1[1], vec2[1])};
+}
 
-  bool intersection_x = o1_left < o2_right && o1_right > o2_left;
-  bool intersection_y = o1_top < o2_bottom && o1_bottom > o2_top;
+Vec2 Vec2::max(const Vec2 &vec1, const Vec2 &vec2) {
+  return {std::max(vec1[0], vec2[0]), std::max(vec1[1], vec2[1])};
+}
+
+// BBox class methods definitions
+BBox::BBox(const Vec2 &pos, const int width, const int height, int id)
+    : _min_pt(pos), _max_pt(pos + Vec2{width, height}), id(id) {};
+
+BBox::BBox(const Vec2 &min_pt, const Vec2 &max_pt)
+    : _min_pt(min_pt), _max_pt(max_pt), id() {};
+
+double BBox::area() const {
+  Vec2 dist = _max_pt - _min_pt;
+  return dist[0] * dist[1];
+}
+
+const BBox BBox::boundingBoxUnion(const BBox &bbox1, const BBox &bbox2) {
+  return {Vec2::min(bbox1._min_pt, bbox2._min_pt),
+          Vec2::max(bbox1._max_pt, bbox2._max_pt)};
+}
+
+bool BBox::isBoundingBoxIntersection(const BBox &bbox1, const BBox &bbox2) {
+  bool intersection_x = bbox1._min_pt[0] <= bbox2._max_pt[0] &&
+                        bbox1._max_pt[0] >= bbox2._min_pt[0];
+
+  bool intersection_y = bbox1._min_pt[1] <= bbox2._max_pt[1] &&
+                        bbox1._max_pt[1] >= bbox2._min_pt[1];
 
   return intersection_x && intersection_y;
 }
 
-bool Obj::operator==(const Obj &other) const {
-  return (_pos == other._pos && _h == other._h && _w == other._w);
+bool BBox::operator==(const BBox &other) const {
+  return (this->id == other.id && this->_max_pt == other._max_pt &&
+          this->_min_pt == other._min_pt);
 }
 
-bool Obj::operator!=(const Obj &other) const { return !(*this == other); }
+bool BBox::operator!=(const BBox &other) const { return !(*this == other); }
 
-std::ostream &operator<<(std::ostream &stream, const Obj &obj) {
-  stream << "Object:\n\t(x, y) = (" << obj.pos()[0] << ", " << obj.pos()[1]
-         << ")" << std::endl;
-  stream << "\twidth = " << obj.getWidth() << std::endl;
-  stream << "\theight = " << obj.getHeight() << std::endl;
+std::ostream &operator<<(std::ostream &stream, const BBox &bbox) {
+  stream << "Object " << bbox.id << std::endl;
+  stream << "min = " << bbox._min_pt << std::endl;
+  stream << "max = " << bbox._max_pt << std::endl;
   return stream;
 }
 
-Collider::Node::Node() : obj(), left(nullptr), right(nullptr) {};
+// Collider class method definitions
+Collider::Node::Node() : bbox(), left(nullptr), right(nullptr) {};
 
-Collider::Node::Node(Obj obj, NodeP &&child1, NodeP &&child2)
-    : obj(obj), left((std::move(child1))), right(std::move(child2)) {};
+Collider::Node::Node(BBox bbox, NodeP &&child1, NodeP &&child2)
+    : bbox(bbox), left((std::move(child1))), right(std::move(child2)) {};
 
-Collider::Node::Node(Obj obj) : obj(obj), left(nullptr), right(nullptr) {};
+Collider::Node::Node(BBox bbox) : bbox(bbox), left(nullptr), right(nullptr) {};
 
 bool Collider::Node::isLeaf() { return !(left || right); }
 
 Collider::Tree::Tree() : root{nullptr} {};
 
-Collider::Tree::Tree(const std::vector<Obj> &objects) {
+Collider::Tree::Tree(const std::vector<BBox> &objects) {
   Collider::Tree::build(objects);
 }
 
-void Collider::Tree::build(const std::vector<Obj> &objects) {
-  for (auto obj : objects) {
-    insert(obj);
+void Collider::Tree::build(const std::vector<BBox> &objects) {
+  for (auto bbox : objects) {
+    insert(bbox);
   }
 }
 
-void Collider::Tree::insert(const Obj &obj) {
+void Collider::Tree::insert(const BBox &bbox) {
   if (!root) {
-    root = std::make_unique<Node>(obj);
+    root = std::make_unique<Node>(bbox);
     return;
   }
 
   if (root->isLeaf()) {
-    root = createNode(root, obj);
+    root = createNode(root, bbox);
     return;
   }
 
-  recursiveInsert(root, nullptr, obj);
+  recursiveInsert(root, nullptr, bbox);
 }
 
 Collider::Tree::Direction
 Collider::Tree::minimalBoundingBox(const std::unique_ptr<Node> &node,
-                                   const Obj &obj) {
-  int l_area{}, r_area{}, s_area{};
+                                   const BBox &bbox) {
+  double l_area{}, r_area{}, s_area{};
   Direction dir{};
 
-  s_area = node->obj.area() + obj.area();
-  l_area =
-      Obj::boundingBoxUnionArea(obj, node->left->obj) + node->right->obj.area();
-  r_area =
-      Obj::boundingBoxUnionArea(obj, node->right->obj) + node->left->obj.area();
+  s_area = node->bbox.area() + bbox.area();
+  l_area = BBox::boundingBoxUnion(bbox, node->left->bbox).area() +
+           node->right->bbox.area();
+  r_area = BBox::boundingBoxUnion(bbox, node->right->bbox).area() +
+           node->left->bbox.area();
 
   if (r_area < l_area) {
     if (r_area < s_area)
@@ -167,18 +146,19 @@ Collider::Tree::minimalBoundingBox(const std::unique_ptr<Node> &node,
   return dir;
 }
 
-Collider::NodeP Collider::Tree::createNode(NodeP &child, const Obj &obj) {
-  auto obj_node = std::make_unique<Node>(obj);
-  auto new_node = std::make_unique<Node>(Obj::boundingBoxUnion(obj, child->obj),
-                                         std::move(child), std::move(obj_node));
+Collider::NodeP Collider::Tree::createNode(NodeP &child, const BBox &bbox) {
+  auto bbox_node = std::make_unique<Node>(bbox);
+  auto new_node =
+      std::make_unique<Node>(BBox::boundingBoxUnion(bbox, child->bbox),
+                             std::move(child), std::move(bbox_node));
   return new_node;
 }
 
 void Collider::Tree::recursiveInsert(NodeP &node, const NodeP &parent,
-                                     const Obj &obj) {
-  switch (minimalBoundingBox(node, obj)) {
+                                     const BBox &bbox) {
+  switch (minimalBoundingBox(node, bbox)) {
   case SIBLING: {
-    auto new_node = createNode(node, obj);
+    auto new_node = createNode(node, bbox);
 
     if (!parent) {
       root = std::move(new_node);
@@ -193,42 +173,42 @@ void Collider::Tree::recursiveInsert(NodeP &node, const NodeP &parent,
   }
   case LEFT: {
     if (node->left->isLeaf()) {
-      node->left = createNode(node->left, obj);
+      node->left = createNode(node->left, bbox);
       break;
     }
 
-    recursiveInsert(node->left, node, obj);
+    recursiveInsert(node->left, node, bbox);
     break;
   }
   case RIGHT: {
     if (node->right->isLeaf()) {
-      node->right = createNode(node->right, obj);
+      node->right = createNode(node->right, bbox);
       break;
     }
 
-    recursiveInsert(node->right, node, obj);
+    recursiveInsert(node->right, node, bbox);
     break;
   }
   }
 
   // update dimension of parent objects
-  if (Obj::boundingBoxUnionArea(node->left->obj, node->right->obj) !=
-      node->obj.area()) {
-    node->obj = Obj::boundingBoxUnion(node->left->obj, node->right->obj);
+  if (BBox::boundingBoxUnion(node->left->bbox, node->right->bbox).area() !=
+      node->bbox.area()) {
+    node->bbox = BBox::boundingBoxUnion(node->left->bbox, node->right->bbox);
   }
 }
 
 void Collider::Tree::recursiveCollisionDetection(
     const NodeP &child1, const NodeP &child2,
-    std::vector<std::pair<Obj, Obj>> &vec) {
+    std::vector<std::pair<BBox, BBox>> &vec) {
   if (!child1 || !child2)
     return;
 
   count++;
 
-  if (Obj::isBoundingBoxIntersection(child1->obj, child2->obj)) {
+  if (BBox::isBoundingBoxIntersection(child1->bbox, child2->bbox)) {
     if (child1->isLeaf() && child2->isLeaf()) {
-      vec.push_back({child1->obj, child2->obj});
+      vec.push_back({child1->bbox, child2->bbox});
       return;
     }
 
@@ -254,7 +234,7 @@ void Collider::Tree::recursiveCollisionDetection(
 }
 
 void Collider::Tree::recursiveCollisionDetectionMain(
-    const NodeP &node, std::vector<std::pair<Obj, Obj>> &vec) {
+    const NodeP &node, std::vector<std::pair<BBox, BBox>> &vec) {
   if (!node)
     return;
   if (node->isLeaf())
@@ -271,7 +251,7 @@ void Collider::Tree::recursiveCollisionDetectionMain(
 }
 
 void Collider::Tree::postOrderFlatten(const NodeP &node,
-                                      std::vector<Obj> &vec) {
+                                      std::vector<BBox> &vec) {
   if (!node) {
     return;
   }
@@ -279,25 +259,25 @@ void Collider::Tree::postOrderFlatten(const NodeP &node,
   postOrderFlatten(node->left, vec);
   postOrderFlatten(node->right, vec);
 
-  vec.push_back(node->obj);
+  vec.push_back(node->bbox);
 }
 
-Collider::Collider(std::vector<Obj> &objects) : tree(objects) {};
+Collider::Collider(std::vector<BBox> &objects) : tree(objects) {};
 
-std::vector<Obj> Collider::flatten() {
-  std::vector<Obj> vec;
+std::vector<BBox> Collider::flatten() {
+  std::vector<BBox> vec;
   tree.postOrderFlatten(tree.root, vec);
   return vec;
 };
 
-std::vector<std::pair<Obj, Obj>> Collider::collisionDetection() {
-  std::vector<std::pair<Obj, Obj>> vec;
+std::vector<std::pair<BBox, BBox>> Collider::collisionDetection() {
+  std::vector<std::pair<BBox, BBox>> vec;
   if (!tree.root || tree.root->isLeaf())
     return vec;
 
   tree.count = 0;
   tree.recursiveCollisionDetectionMain(tree.root, vec);
-  std::cout<<"count is = "<<tree.count<<std::endl;
+  std::cout << "count is = " << tree.count << std::endl;
 
   return vec;
 }

@@ -6,7 +6,7 @@
 
 BOOST_AUTO_TEST_SUITE(bvh_tree_test)
 
-void checkObjVec(const size_t num_objs,const std::vector<Obj> &result, const std::vector<Obj> &expected) {
+void checkBBoxVec(const size_t num_objs,const std::vector<BBox> &result, const std::vector<BBox> &expected) {
   size_t size = 2 * num_objs - 1; // Given the number of leaf node, there will always be 2n-1 nodes in a binary tree
 
   assert(expected.size() == size);
@@ -18,104 +18,104 @@ void checkObjVec(const size_t num_objs,const std::vector<Obj> &result, const std
 }
 
 BOOST_AUTO_TEST_CASE(root) { 
-  Obj o1 {{3, 4}, 2, 1}; 
-  std::vector<Obj> objs { o1 };
+  BBox o1 {{3, 4}, 2, 1, 1}; 
+  std::vector<BBox> objs { o1 };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.flatten();
+  std::vector<BBox> result = coll.flatten();
 
-  std::vector<Obj> expected = {
-    {{3, 4}, 2, 1}
+  std::vector<BBox> expected = {
+    {{3, 4}, 2, 1, 1}
   };
 
-  checkObjVec(objs.size(), result, expected);
+  checkBBoxVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(two_objects) {
-  std::vector<Obj> objs = {
-    {{3, 2}, 2, 3},
-    {{1, 1}, 1, 1}
+  std::vector<BBox> objs = {
+    {{3, 2}, 2, 3, 1},
+    {{1, 1}, 1, 1, 2}
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.flatten();
+  std::vector<BBox> result = coll.flatten();
 
-  std::vector<Obj> expected = {
-    {{3, 2}, 2, 3},
-    {{1, 1}, 1, 1},
-    {{1, 1}, 4, 4}
+  std::vector<BBox> expected = {
+    {{3, 2}, 2, 3, 1},
+    {{1, 1}, 1, 1, 2},
+    {{1, 1}, 4, 4, 0}
   };
   
-  checkObjVec(objs.size(), result, expected);
+  checkBBoxVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(three_objects_nested_and_disjoint) {
-  std::vector<Obj> objs = {
-    {{0, 0}, 10, 10}, 
-    {{2, 2}, 2, 2},
-    {{20, 20}, 5, 5}
+  std::vector<BBox> objs = {
+    {{0, 0}, 10, 10, 1}, 
+    {{2, 2}, 2, 2, 2},
+    {{20, 20}, 5, 5, 3}
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.flatten();
+  std::vector<BBox> result = coll.flatten();
 
-  std::vector<Obj> expected = {
-    {{0, 0}, 10, 10},
-    {{2, 2}, 2, 2},
-    {{0, 0}, 10, 10},
-    {{20, 20}, 5, 5},
-    {{0, 0}, 25, 25}
+  std::vector<BBox> expected = {
+    {{0, 0}, 10, 10, 1},
+    {{2, 2}, 2, 2, 2},
+    {{0, 0}, 10, 10, 0},
+    {{20, 20}, 5, 5, 3},
+    {{0, 0}, 25, 25, 0}
   };
 
-  checkObjVec(objs.size(), result, expected);
+  checkBBoxVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(four_objects_chain_overlap) {
-  std::vector<Obj> objs = {
-    {{0, 0}, 4, 4},
-    {{2, 2}, 4, 4},
-    {{5, 5}, 4, 4},
-    {{9, 9}, 2, 2}
+  std::vector<BBox> objs = {
+    {{0, 0}, 4, 4, 1},
+    {{2, 2}, 4, 4, 2},
+    {{5, 5}, 4, 4, 3},
+    {{9, 9}, 2, 2, 4}
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.flatten();
+  std::vector<BBox> result = coll.flatten();
 
-  std::vector<Obj> expected = {
-    {{0, 0}, 4, 4},
-    {{2, 2}, 4, 4},
-    {{0, 0}, 6, 6},
-    {{5, 5}, 4, 4},
-    {{9, 9}, 2, 2},
-    {{5, 5}, 6, 6},
-    {{0, 0}, 11, 11}
+  std::vector<BBox> expected = {
+    {{0, 0}, 4, 4, 1},
+    {{2, 2}, 4, 4, 2},
+    {{0, 0}, 6, 6, 0},
+    {{5, 5}, 4, 4, 3},
+    {{9, 9}, 2, 2, 4},
+    {{5, 5}, 6, 6, 0},
+    {{0, 0}, 11, 11, 0}
   };
 
-  checkObjVec(objs.size(), result, expected);
+  checkBBoxVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(four_objects_disjoint) {
-  std::vector<Obj> objs = {
-    {{0, 0}, 5, 5},
-    {{6, 4}, 2, 2},
-    {{3, 10}, 5, 5},
-    {{2, 6}, 2, 2},
+  std::vector<BBox> objs = {
+    {{0, 0}, 5, 5, 1},
+    {{6, 4}, 2, 2, 2},
+    {{3, 10}, 5, 5, 3},
+    {{2, 6}, 2, 2, 4},
   };
 
   Collider coll(objs);
-  std::vector<Obj> result = coll.flatten();
+  std::vector<BBox> result = coll.flatten();
 
-  std::vector<Obj> expected = {
-    {{0, 0}, 5, 5},
-    {{2, 6}, 2, 2},
-    {{0, 0}, 5, 8},
-    {{6, 4}, 2, 2},
-    {{0, 0}, 8, 8},
-    {{3, 10}, 5, 5},
-    {{0, 0}, 8, 15},
+  std::vector<BBox> expected = {
+    {{0, 0}, 5, 5, 1},
+    {{2, 6}, 2, 2, 4},
+    {{0, 0}, 5, 8, 0},
+    {{6, 4}, 2, 2, 2},
+    {{0, 0}, 8, 8, 0},
+    {{3, 10}, 5, 5, 3},
+    {{0, 0}, 8, 15, 0},
   };
 
-  checkObjVec(objs.size(), result, expected);
+  checkBBoxVec(objs.size(), result, expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

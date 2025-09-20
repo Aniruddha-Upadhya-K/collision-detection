@@ -5,37 +5,37 @@
 BOOST_AUTO_TEST_SUITE(union_test)
 
 BOOST_AUTO_TEST_CASE(bounding_box_overlap) {
-    Obj o1(Pos(0, 0), 10, 10);
-    Obj o2(Pos(5, 5), 10, 10);
+    BBox o1(Vec2(0, 0), 10, 10, 1);
+    BBox o2(Vec2(5, 5), 10, 10, 2);
 
-    Obj result = Obj::boundingBoxUnion(o1, o2);
-    Obj expected {{0, 0}, 15, 15};
+    BBox result = BBox::boundingBoxUnion(o1, o2);
+    BBox expected {{0, 0}, 15, 15, 0};
 
     BOOST_CHECK_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(bounding_box_disjoint) {
-    Obj o1(Pos(0, 0), 10, 10);
-    Obj o2(Pos(20, 20), 5, 5);
+    BBox o1(Vec2(0, 0), 10, 10, 1);
+    BBox o2(Vec2(20, 20), 5, 5, 2);
 
-    Obj result = Obj::boundingBoxUnion(o1, o2);
-    Obj expected {{0, 0}, 25, 25};
+    BBox result = BBox::boundingBoxUnion(o1, o2);
+    BBox expected {{0, 0}, 25, 25, 0};
 
     BOOST_CHECK_EQUAL(result, expected);
 }
 
 BOOST_AUTO_TEST_CASE(bounding_box_area_overlap) {
-    Obj o1(Pos(0, 0), 10, 10);
-    Obj o2(Pos(5, 5), 10, 10);
+    BBox o1(Vec2(0, 0), 10, 10, 1);
+    BBox o2(Vec2(5, 5), 10, 10, 1);
 
-    BOOST_CHECK_EQUAL(Obj::boundingBoxUnionArea(o1, o2), 225);
+    BOOST_CHECK_EQUAL(BBox::boundingBoxUnion(o1, o2).area(), 225);
 }
 
 BOOST_AUTO_TEST_CASE(bounding_box_area_disjoint) {
-    Obj o1(Pos(0, 0), 10, 10);
-    Obj o2(Pos(20, 20), 5, 5);
+    BBox o1(Vec2(0, 0), 10, 10, 1);
+    BBox o2(Vec2(20, 20), 5, 5, 2);
 
-    BOOST_CHECK_EQUAL(Obj::boundingBoxUnionArea(o1, o2), 625);
+    BOOST_CHECK_EQUAL(BBox::boundingBoxUnion(o1, o2).area(), 625);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

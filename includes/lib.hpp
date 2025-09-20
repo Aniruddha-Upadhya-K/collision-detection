@@ -7,80 +7,73 @@
 #include <utility>
 #include <vector>
 
-class Pos {
+class Vec2 {
 public:
-  Pos();
+  std::array<int, 2> val;
 
-  Pos(int x, int y);
+  Vec2() = default;
 
-  void update(int delta_x, int delta_y);
+  Vec2(int x, int y);
 
-  int getX() const;
-  void setX(int x);
+  bool operator==(const Vec2 &other) const;
+  bool operator!=(const Vec2 &other) const;
 
-  int getY() const;
-  void setY(int y);
-
-  const std::array<int, 2> xy() const;
-
-  bool operator==(const Pos &other) const;
-  bool operator!=(const Pos &other) const;
+  Vec2 operator+(const Vec2 &other) const;
+  Vec2 operator-(const Vec2 &other) const;
+  int operator[](std::size_t idx) const;
+  
+  static Vec2 min(const Vec2 &vec1, const Vec2 &vec2);
+  static Vec2 max(const Vec2 &vec1, const Vec2 &vec2) ;
 
 private:
-  int _x, _y;
+  friend std::ostream &operator<<(std::ostream &stream, const Vec2 &vec);
 };
 
-class Obj {
-  // TODO: copy/move constructor needed
+class BBox{
 public:
-  Obj();
-  Obj(const Pos &pos, const int width, const int height);
+  static const BBox boundingBoxUnion(const BBox &bbox1, const BBox &bbox2);
 
-  const std::array<int, 2> pos() const;
-  void pos(const Pos &pos);
+  static bool isBoundingBoxIntersection(const BBox &bbox1, const BBox &bbox2);
 
-  int getHeight() const;
-  void setHeight(int height);
+public:
+  BBox() = default;
+  BBox(const Vec2 &pos, const int width, const int height, int id);
+  BBox(const Vec2 &min_pt, const Vec2 &max_pt);
 
-  int getWidth() const;
-  void setWidth(int width);
+  double area() const;
 
-  int area() const;
-
-  bool operator==(const Obj &other) const;
-  bool operator!=(const Obj &other) const;
-
-  static const Obj boundingBoxUnion(const Obj &obj1, const Obj &obj2);
-  static int boundingBoxUnionArea(const Obj &obj1, const Obj &obj2);
-  static bool isBoundingBoxIntersection(const Obj &obj1, const Obj &obj2);
+  bool operator==(const BBox &other) const;
+  bool operator!=(const BBox &other) const;
 
 private:
-  Pos _pos;
-  int _w, _h;
+  Vec2 _min_pt, _max_pt;
+  int id;
+
+private:
+  friend std::ostream &operator<<(std::ostream &stream, const BBox &bbox);
 };
 
-std::ostream& operator<<(std::ostream &stream, const Obj &obj);
 
 class Collider {
 public:
   Collider();
-  explicit Collider(std::vector<Obj> &objects);
+  explicit Collider(std::vector<BBox> &objects);
 
-  std::vector<Obj> flatten();
+  std::vector<BBox> flatten();
 
-  std::vector<std::pair<Obj, Obj>> collisionDetection();
+  std::vector<std::pair<BBox, BBox>> collisionDetection();
 
 private:
   struct Node {
     using NodeP = std::unique_ptr<Node>;
 
-    Obj obj;
+    BBox bbox;
     NodeP left, right;
 
     Node();
-    Node(Obj obj, NodeP &&child1, NodeP &&child2);
+    Node(BBox bbox, NodeP &&child1, NodeP &&child2);
 
-    explicit Node(Obj obj);
+    explicit Node(BBox bbox);
 
     bool isLeaf();
   };
@@ -92,28 +85,29 @@ private:
     std::unique_ptr<Node> root;
 
     Tree();
-    explicit Tree(const std::vector<Obj> &objects);
+    explicit Tree(const std::vector<BBox> &objects);
 
-    void build(const std::vector<Obj> &objects);
+    void build(const std::vector<BBox> &objects);
 
-    void insert(const Obj &obj);
+    void insert(const BBox &bbox);
 
     void recursiveCollisionDetectionMain(const NodeP &node,
-                                         std::vector<std::pair<Obj, Obj>> &vec);
-    void recursiveCollisionDetection(const NodeP &child1, const NodeP &child2,
-                                     std::vector<std::pair<Obj, Obj>> &vec);
+                                         std::vector<std::pair<BBox, BBox>> &vec);
 
-    void postOrderFlatten(const NodeP &node, std::vector<Obj> &vec);
+    void recursiveCollisionDetection(const NodeP &child1, const NodeP &child2,
+                                     std::vector<std::pair<BBox, BBox>> &vec);
+
+    void postOrderFlatten(const NodeP &node, std::vector<BBox> &vec);
 
   private:
     enum Direction { LEFT, RIGHT, SIBLING };
 
     Direction minimalBoundingBox(const std::unique_ptr<Node> &node,
-                                 const Obj &obj);
+                                 const BBox &bbox);
 
-    NodeP createNode(NodeP &child, const Obj &obj);
+    NodeP createNode(NodeP &child, const BBox &bbox);
 
-    void recursiveInsert(NodeP &node, const NodeP &parent, const Obj &obj);
+    void recursiveInsert(NodeP &node, const NodeP &parent, const BBox &bbox);
   };
 
   Tree tree;
