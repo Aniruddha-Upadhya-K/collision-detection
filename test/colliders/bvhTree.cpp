@@ -3,8 +3,9 @@
 #include <cassert>
 #include <vector>
 #include "lib.hpp"
+#include "colliders/greedyCollider.hpp"
 
-BOOST_AUTO_TEST_SUITE(bvh_tree_test)
+BOOST_AUTO_TEST_SUITE(greedy_bvh_tree_test)
 
 void checkBBoxVec(const size_t num_objs,const std::vector<BBox> &result, const std::vector<BBox> &expected) {
   size_t size = 2 * num_objs - 1; // Given the number of leaf node, there will always be 2n-1 nodes in a binary tree
@@ -21,7 +22,7 @@ BOOST_AUTO_TEST_CASE(root) {
   BBox o1 {{3, 4}, 2, 1, 1}; 
   std::vector<BBox> objs { o1 };
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   std::vector<BBox> result = coll.flatten();
 
   std::vector<BBox> expected = {
@@ -37,7 +38,7 @@ BOOST_AUTO_TEST_CASE(two_objects) {
     {{1, 1}, 1, 1, 2}
   };
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   std::vector<BBox> result = coll.flatten();
 
   std::vector<BBox> expected = {
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(three_objects_nested_and_disjoint) {
     {{20, 20}, 5, 5, 3}
   };
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   std::vector<BBox> result = coll.flatten();
 
   std::vector<BBox> expected = {
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(four_objects_chain_overlap) {
     {{9, 9}, 2, 2, 4}
   };
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   std::vector<BBox> result = coll.flatten();
 
   std::vector<BBox> expected = {
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(four_objects_disjoint) {
     {{2, 6}, 2, 2, 4},
   };
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   std::vector<BBox> result = coll.flatten();
 
   std::vector<BBox> expected = {

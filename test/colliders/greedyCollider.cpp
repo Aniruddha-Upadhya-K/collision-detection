@@ -1,9 +1,10 @@
 #define BOOST_TEST_MODULE collision_detection_test
-#include "lib.hpp"
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <utility>
 #include <vector>
+#include "lib.hpp"
+#include "colliders/greedyCollider.hpp"
 
 std::ostream &operator<<(std::ostream &stream,
     const std::pair<BBox, BBox> &other) {
@@ -11,7 +12,7 @@ std::ostream &operator<<(std::ostream &stream,
   return stream;
 }
 
-BOOST_AUTO_TEST_SUITE(collision_pair_detection)
+BOOST_AUTO_TEST_SUITE(greedy_collision_pair_detection)
 
 void checkCollision(std::vector<std::pair<BBox, BBox>> &result,
                     std::vector<std::pair<BBox, BBox>> &expected) {
@@ -22,10 +23,10 @@ void checkCollision(std::vector<std::pair<BBox, BBox>> &result,
   }
 }
 
-BOOST_AUTO_TEST_CASE(root) {
+BOOST_AUTO_TEST_CASE(greedy_root) {
   std::vector<BBox> objs{{{3, 4}, 2, 1, 1}};
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   auto result = coll.collisionDetection();
 
   std::vector<std::pair<BBox, BBox>> expected{};
@@ -33,10 +34,10 @@ BOOST_AUTO_TEST_CASE(root) {
   checkCollision(result, expected);
 }
 
-BOOST_AUTO_TEST_CASE(two_objects_colliding) {
+BOOST_AUTO_TEST_CASE(greedy_two_objects_colliding) {
   std::vector<BBox> objs = {{{2, 3}, 3, 2, 1}, {{0, 2}, 3, 4, 2}};
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   auto result = coll.collisionDetection();
 
   std::vector<std::pair<BBox, BBox>> expected = {
@@ -46,14 +47,14 @@ BOOST_AUTO_TEST_CASE(two_objects_colliding) {
   checkCollision(result, expected);
 }
 
-BOOST_AUTO_TEST_CASE(three_objects_colliding) {
+BOOST_AUTO_TEST_CASE(greedy_three_objects_colliding) {
   std::vector<BBox> objs = {
     {{0, 0}, 10, 10, 1}, 
     {{2, 2}, 2, 2, 2},
     {{20, 20}, 5, 5, 3}
   };
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   auto result = coll.collisionDetection();
 
   std::vector<std::pair<BBox, BBox>> expected = {
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(three_objects_colliding) {
   checkCollision(result, expected);
 }
 
-BOOST_AUTO_TEST_CASE(four_objects_colliding) {
+BOOST_AUTO_TEST_CASE(greedy_four_objects_colliding) {
   std::vector<BBox> objs = {
     {{0, 0}, 4, 4, 1}, // A
     {{2, 2}, 4, 4, 2}, // B
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(four_objects_colliding) {
    *    A  B C  D
    */
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   auto result = coll.collisionDetection();
 
   std::vector<std::pair<BBox, BBox>> expected = {
@@ -91,7 +92,7 @@ BOOST_AUTO_TEST_CASE(four_objects_colliding) {
   checkCollision(result, expected);
 }
 
-BOOST_AUTO_TEST_CASE(four_objects_irregular_sizes_colliding) {
+BOOST_AUTO_TEST_CASE(greedy_four_objects_irregular_sizes_colliding) {
   std::vector<BBox> objs = {
     {{0, 0}, 6, 5, 1}, // A
     {{5, 4}, 3, 2, 2}, // B
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(four_objects_irregular_sizes_colliding) {
     {{1, 4}, 2, 3, 4}, // D
   };
 
-  Collider coll(objs);
+  GreedyCollider coll(objs);
   std::vector<std::pair<BBox, BBox>> result = coll.collisionDetection();
 
   /*

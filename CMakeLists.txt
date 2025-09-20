@@ -7,7 +7,7 @@ project(CollisionDestection
 
 find_package(Boost REQUIRED COMPONENTS unit_test_framework NO_MODULE)
 
-file(GLOB APP_SOURCES src/lib.cpp)
+file(GLOB APP_SOURCES src/lib.cpp src/colliders/*.cpp)
 
 add_library(collision_lib STATIC ${APP_SOURCES})
 target_compile_options(collision_lib PUBLIC -Wall -Wextra -g -O0 -pedantic)
@@ -19,7 +19,7 @@ target_link_libraries(collision_detection PRIVATE collision_lib)
 
 enable_testing()
 
-file(GLOB TEST_SOURCES test/*.cpp)
+file(GLOB TEST_SOURCES test/*.cpp test/colliders/*.cpp)
 
 foreach(test_file ${TEST_SOURCES})
   get_filename_component(test_name ${test_file} NAME_WE)
